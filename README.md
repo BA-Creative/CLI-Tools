@@ -7,10 +7,10 @@ This repository contains a collection of useful shell scripts that can be execut
 You can run any script in this repository directly using curl and bash:
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/SCRIPT_NAME.sh)
+bash <(curl -s https://raw.githubusercontent.com/BA-Creative/CLI-Tools/refs/heads/main/SCRIPT_NAME.sh)
 ```
 
-Replace `YOUR_USERNAME` and `SCRIPT_NAME.sh` with the appropriate values.
+Replace `BA-Creative` and `SCRIPT_NAME.sh` with the appropriate values.
 
 ## Available Scripts
 
@@ -24,7 +24,7 @@ Replace `YOUR_USERNAME` and `SCRIPT_NAME.sh` with the appropriate values.
 
 ⚠️ **Important**: Always review scripts before executing them, especially when running them directly from the internet.
 
-- **Inspect first**: `curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/SCRIPT_NAME.sh`
+- **Inspect first**: `curl -s https://raw.githubusercontent.com/BA-Creative/CLI-Tools/refs/heads/main/SCRIPT_NAME.sh`
 - **Only run trusted sources**: Verify the repository and script contents
 - **Permission awareness**: Scripts run with your current user permissions
 - **Network safety**: Ensure you trust the source and have a secure connection
@@ -78,19 +78,19 @@ fi
 ### Basic Execution
 ```bash
 # Run a script directly
-bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/setup.sh)
+bash <(curl -s https://raw.githubusercontent.com/BA-Creative/cli-scripts/main/setup.sh)
 ```
 
 ### With Parameters
 ```bash
 # Pass arguments to the script
-bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/install.sh) --verbose --config=/path/to/config
+bash <(curl -s https://raw.githubusercontent.com/BA-Creative/cli-scripts/main/install.sh) --verbose --config=/path/to/config
 ```
 
 ### Download and Inspect
 ```bash
 # Download, review, then execute
-curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/script.sh > temp_script.sh
+curl -s https://raw.githubusercontent.com/BA-Creative/cli-scripts/main/script.sh > temp_script.sh
 cat temp_script.sh  # Review the script content
 chmod +x temp_script.sh
 ./temp_script.sh
@@ -100,10 +100,10 @@ rm temp_script.sh
 ### Using with Different Shells
 ```bash
 # For zsh users (default on macOS)
-zsh <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/script.sh)
+zsh <(curl -s https://raw.githubusercontent.com/BA-Creative/cli-scripts/main/script.sh)
 
 # For bash users
-bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/cli-scripts/main/script.sh)
+bash <(curl -s https://raw.githubusercontent.com/BA-Creative/cli-scripts/main/script.sh)
 ```
 
 ## Environment Compatibility
@@ -165,4 +165,4 @@ Scripts in this repository are provided as-is. Users are responsible for:
 
 ---
 
-**Note**: Replace `YOUR_USERNAME` in the URLs above with your actual GitHub username once you publish this repository.
+**Note**: Replace `BA-Creative` in the URLs above with your actual GitHub username once you publish this repository.
