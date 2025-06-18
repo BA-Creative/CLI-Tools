@@ -24,13 +24,13 @@ NC='\033[0m' # No Color
 print_color() {
     local color=$1
     local message=$2
-    echo -e "${color}${message}${NC}"
+    echo "${color}${message}${NC}"
 }
 
 cat > "./.env" << EOF
-MYSQL_ROOT_USER=root
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=wp
+MARIADB_ROOT_USER=root
+MARIADB_ROOT_PASSWORD=root
+MARIADB_DATABASE=wp
 
 # LOCAL DEV
 LOCAL_PORT_PHP=8080
@@ -62,9 +62,9 @@ services:
       - 3307:3306
     env_file: .env
     environment:
-      MYSQL_ROOT_USER: '${MYSQL_ROOT_USER}'
-      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
-      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MARIADB_ROOT_USER: '${MARIADB_ROOT_USER}'
+      MARIADB_ROOT_PASSWORD: '${MARIADB_ROOT_PASSWORD}'
+      MARIADB_DATABASE: '${MARIADB_DATABASE}'
     volumes:
       - db-data:/var/lib/mysql
       - ./_database:/backup # Mount the host directory for syncing the dump
@@ -77,7 +77,7 @@ services:
     command: >
       sh -c "
         apt-get update && apt-get install cron -y &&
-        echo \"* * * * * mysqldump -u${MYSQL_ROOT_USER} -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} > /backup/out.sql\" > /etc/cron.d/mysql-dump && 
+        echo \"* * * * * mysqldump -u${MARIADB_ROOT_USER} -p${MARIADB_ROOT_PASSWORD} ${MARIADB_DATABASE} > /backup/out.sql\" > /etc/cron.d/mysql-dump && 
         chmod 0644 /etc/cron.d/mysql-dump && crontab /etc/cron.d/mysql-dump && cron && 
 
         docker-entrypoint.sh mysqld;
@@ -93,7 +93,7 @@ services:
     env_file: .env
     environment:
       PMA_HOST: database
-      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MARIADB_ROOT_PASSWORD: '${MARIADB_ROOT_PASSWORD}'
     networks:
       - wordpress-network
 
@@ -160,6 +160,10 @@ mv composer.phar /usr/local/bin/composer;
 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar;
 chmod +x wp-cli.phar;
 mv wp-cli.phar /usr/local/bin/wp;
+
+# Install MySQL client # =======================================================
+# ==============================================================================
+apt-get install -y default-mysql-client;
 
 # Install Git-CLI # ============================================================
 # ==============================================================================
@@ -241,34 +245,55 @@ wp plugin install flamingo --allow-root --activate;
 wp plugin install wp-mail-smtp --allow-root --activate;
 
 # ===================================
+# Install Sage theme
+# ===================================
+composer create-project roots/sage $WP_PROJECT_HANDLE --working-dir=/var/www/html/wp-content/themes;
+cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+composer require roots/acorn;
+composer require log1x/acf-composer;
+composer require log1x/sage-directives;
+composer require log1x/sage-svg;
+
+# Install NPM dependencies
+npm install;
+npm install swiper;
+
+# ===================================
 # Clone RoxyPress (Expects: wp-content)
 # ===================================
-git clone -b prod git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /var/www/git-repo-download;
-rm -rf /var/www/git-repo-download/.git || true;
-rm -rf /var/www/git-repo-download/.gitignore || true;
+git clone git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /var/www/$WP_TEMPLATE_REPO;
+rm -rf /var/www/$WP_TEMPLATE_REPO/.git || true;
+rm -rf /var/www/$WP_TEMPLATE_REPO/.gitignore || true;
 
-#rsync -av --exclude='.git' --exclude='.gitignore' --ignore-existing /var/www/git-repo-download/ /var/www/html/wp-content;
-rsync -av /var/www/git-repo-download/ /var/www/html/wp-content/
+# Import DB
+cd /var/www/html;
+wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root || true;
+rm /var/www/$WP_TEMPLATE_REPO/db.sql || true;
 
-# Rename folder
-cd /var/www/html/wp-content/themes;
-mv $WP_BASE_THEME_DIR $WP_PROJECT_HANDLE;
-cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
-
-# Replace "base" in vite.config.js
-sed -i "s|base: .*|base: '/app/themes/${WP_PROJECT_HANDLE}/public/build/',|" vite.config.js;
-# Append "server" property to vite.config.js
-sed -i "/export default defineConfig({/a server: { host: 'localhost', port: ${LOCAL_PORT_NPM}, strictPort: true, https: false }," vite.config.js;
-
-# Set up sage .env file
-printf "APP_URL=http://localhost:${LOCAL_PORT_PHP}" > /var/www/html/wp-content/themes/"${WP_PROJECT_HANDLE}"/.env;
-
-# Install dependencies
-composer install;
-npm install;
+# Merge or Overwrite wp-content
+rsync -av /var/www/$WP_TEMPLATE_REPO/ /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
 
 # Remove temporary git clone directory
-rm -rf /var/www/git-repo-download;
+rm -rf /var/www/$WP_TEMPLATE_REPO;
+
+# Remove any .sql files (just in case)
+find /var/www/html -name "**.sql" -type f -delete;
+
+# Install dependencies
+cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+composer install;
+npm install;
+npm run build;
+
+# ===================================
+# Modify theme
+# ===================================
+# Replace collect(['setup', 'filters']) in functions.php
+cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+sed -i "s/collect(\['setup', 'filters'\])/collect(array_map(fn(\$f) => pathinfo(\$f, PATHINFO_FILENAME), glob(__DIR__ . '\/app\/*.php')))/g" functions.php;
+
+# Set up sage .env file
+printf "APP_URL=http://localhost:${LOCAL_PORT_PHP}" > ./.env;
 
 # ===================================
 # Activate theme
@@ -276,11 +301,12 @@ rm -rf /var/www/git-repo-download;
 cd /var/www/html;
 wp theme activate $WP_PROJECT_HANDLE --allow-root;
 
+# ===================================
+# Start DEV server
+# ===================================
+# Start NPM development server
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
-
-# Build assets
-npm run build;
-npm run dev;
+npm run dev &
 
 MAINEOF
 
@@ -303,4 +329,4 @@ open -a "Docker" && docker-compose -f docker-compose.yml up -d --build
 printf "\n=========================================\n\n"
 print_color "$GREEN" "PHP: http://localhost:8080"
 print_color "$GREEN" "NPM: http://localhost:3000"
-printf "\n\n=========================================\n"
+printf "\n=========================================\n"
