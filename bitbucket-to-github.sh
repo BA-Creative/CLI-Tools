@@ -23,12 +23,12 @@ echo "Migrating: $REPO"
 
 # Check if the destination directory already exists
 if [ -d "$REPO.git" ]; then
-  rm -rf "$REPO.git" || { echo "Error: Failed to remove $REPO.git"; exit 1; }
+  echo "$REPO.git exists, skipping Bitbucket clone."
+  cd "$REPO.git" || exit 1
+else
+  git clone --mirror "git@bitbucket.org:$BITBUCKET_USER/$REPO.git" || { echo "Error: Clone failed."; exit 1; }
+  cd "$REPO.git" || exit 1
 fi
-
-# Clone the Bitbucket repo using SSH and --mirror to get all branches/tags
-git clone --mirror "git@bitbucket.org:$BITBUCKET_USER/$REPO.git" || { echo "Error: Clone failed."; exit 1; }
-cd "$REPO.git" || exit 1
 
 # Set GitHub as the new remote via SSH
 git remote set-url origin "git@github.com:$GITHUB_USER/$REPO.git"
@@ -40,10 +40,6 @@ ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"
 git ls-remote origin &> /dev/null
 if [ $? -ne 0 ]; then
   if command -v gh &> /dev/null; then
-    if [ -z "$GH_TOKEN" ]; then
-      echo "Error: GH_TOKEN not set."; exit 1
-    fi
-    export GITHUB_TOKEN="$GH_TOKEN"
     gh repo create "$GITHUB_USER/$REPO" --private --confirm || { echo "Error: gh repo create failed."; exit 1; }
   else
     echo "Error: GitHub repo does not exist and gh not installed."; exit 1
