@@ -1,10 +1,8 @@
 #!/bin/bash
 
-EOL
-    # Requires SSH authentication to Bitbucket with authorised public key
-    # Requires SSH authentication to GitHub using >> gh auth login
-    # Requires GitHub CLI (gh) installed for repository creation
-EOF
+# Requires SSH authentication to Bitbucket with authorised public key
+# Requires SSH authentication to GitHub using >> gh auth login
+# Requires GitHub CLI (gh) installed for repository creation
 
 # --- CONFIGURATION ---
 BITBUCKET_USER="bacreative"
