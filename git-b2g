@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Requires SSH authentication to Bitbucket with authorised public key
 # Requires SSH authentication to GitHub using >> gh auth login
@@ -8,6 +8,27 @@
 BITBUCKET_USER="bacreative"
 GITHUB_USER="BA-Creative"
 # ----------------------
+
+# Check if GitHub CLI is installed, install if not
+if ! command -v gh &> /dev/null; then
+  echo "GitHub CLI not found. Installing using Homebrew..."
+  
+  # Check if Homebrew is installed
+  if ! command -v brew &> /dev/null; then
+    echo "Error: Homebrew is not installed. Please install Homebrew first:"
+    echo "Visit: https://brew.sh/"
+    exit 1
+  fi
+  
+  # Install GitHub CLI using Homebrew
+  brew install gh || { echo "Error: Failed to install GitHub CLI."; exit 1; }
+  
+  echo "GitHub CLI installed successfully!"
+  echo "Please run 'gh auth login' to authenticate with GitHub before running this script again."
+  exit 0
+else
+  echo "GitHub CLI is already installed."
+fi
 
 # Check if a repo name was provided
 if [ -z "$1" ]; then
