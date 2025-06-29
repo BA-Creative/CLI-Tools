@@ -36,21 +36,22 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-REPO="$1"
+SRC_REPO="$1"
+DEST_REPO="${2:-$SRC_REPO}"
 
-echo "Migrating: $REPO"
+echo "Migrating: $SRC_REPO -> $DEST_REPO"
 
 # Check if the destination directory already exists
-if [ -d "$REPO.git" ]; then
-  echo "$REPO.git exists, skipping Bitbucket clone."
-  cd "$REPO.git" || exit 1
+if [ -d "$SRC_REPO.git" ]; then
+  echo "$SRC_REPO.git exists, skipping Bitbucket clone."
+  cd "$SRC_REPO.git" || exit 1
 else
-  git clone --mirror "git@bitbucket.org:$BITBUCKET_USER/$REPO.git" || { echo "Error: Clone failed."; exit 1; }
-  cd "$REPO.git" || exit 1
+  git clone --mirror "git@bitbucket.org:$BITBUCKET_USER/$SRC_REPO.git" || { echo "Error: Clone failed."; exit 1; }
+  cd "$SRC_REPO.git" || exit 1
 fi
 
 # Set GitHub as the new remote via SSH
-git remote set-url origin "git@github.com:$GITHUB_USER/$REPO.git"
+git remote set-url origin "git@github.com:$GITHUB_USER/$DEST_REPO.git"
 
 # Test SSH connection to GitHub
 ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"
@@ -59,7 +60,7 @@ ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"
 git ls-remote origin &> /dev/null
 if [ $? -ne 0 ]; then
   if command -v gh &> /dev/null; then
-    gh repo create "$GITHUB_USER/$REPO" --private --confirm || { echo "Error: gh repo create failed."; exit 1; }
+    gh repo create "$GITHUB_USER/$DEST_REPO" --private --confirm || { echo "Error: gh repo create failed."; exit 1; }
   else
     echo "Error: GitHub repo does not exist and gh not installed."; exit 1
   fi
@@ -68,5 +69,5 @@ fi
 # Push everything to GitHub
 git push --mirror || { echo "Error: Push failed."; exit 1; }
 cd ..
-rm -rf "$REPO.git"
-echo "Done: $REPO"
+rm -rf "$SRC_REPO.git"
+echo "Done: $SRC_REPO -> $DEST_REPO"
