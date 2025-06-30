@@ -17,7 +17,7 @@ bash <(curl -s https://raw.githubusercontent.com/BA-Creative/CLI-Tools/main/FILE
 | Script | Description | Parameters |
 |--------|-------------|-------|
 | roxypress | Creates a WordPress development instance using Docker | - |
-| git-b2g | Bitbucket to GitHub repo migration tool | Repo name as VAR_1 |
+| git-b2g | Bitbucket to GitHub repo migration tool | VAR_1 [VAR_2] |
 | wal | Development tool for interacting with Likewise project | - |
 
 *This table will be updated as scripts are added to the repository.*
