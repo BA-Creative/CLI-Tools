@@ -40,35 +40,47 @@ elif [[ "$1" == "help" ]]; then
   echo '
 ############################################################################################################
 
+                                      !!! Usage !!!
+                                            -
+                      The CLI_TOOL is reffering to this script. Example:
+
+      - bash <(curl -s https://raw.githubusercontent.com/BA-Creative/CLI-Tools/main/wal/tools)
+      - bash <(curl -s https://raw.githubusercontent.com/BA-Creative/CLI-Tools/main/wal/tools) help
+
+############################################################################################################
+
                                     !!! MUST READ !!!
                                             -
     Please use this as a guide, BUT be sure to understand what it is exactly you are doing
 
 ############################################################################################################
 
-  1. [ sh '$0' git-reset && sh '$0' git-pull ] Generally, the first thing you would want
-  to do is to ensure each of the local theme is up to date with Git.
 
-  2. [ sh '$0' shopify-pull ] You would then want to get the latest content from Shopify.
+  1. [ CLI_TOOL git-reset ] Generally, the first thing you would want to do is to ensure
+  each of the local theme is up to date with Git. Run this command to reset to the last known commit.
+
+  2. [ CLI_TOOL git-pull ] Run git pull to ensure that the local theme is up to date with the remote.
+
+  3. [ CLI_TOOL shopify-pull ] You would then want to get the latest content from Shopify.
   However, this should technically be the same as git-pull, since it is connected to Git.
-    - If changes are detected, run [ sh '$0' git-commit ] to save it.
+    - If changes are detected, run [ CLI_TOOL git-commit ] to save it.
 
-  3. [ sh '$0' copy-files ] Next, you would want to copy the core theme files. This command will
+  4. [ CLI_TOOL copy-files ] Next, you would want to copy the core theme files. This command will
   create a snapshot of the current state of the files into a ZIP file, just in case. This should all
   be non JSON files.
 
-  4. Review. You should review if all files have been copied correctly.
+  5. Review. You should review if all files have been copied correctly.
 
-  5. [ sh '$0' git-commit ] Commit the changes to each of the repo/branch. Keep in mind that
+  6. [ CLI_TOOL git-commit ] Commit the changes to each of the repo/branch. Keep in mind that
   this still does not include any content updates made within the Theme Customiser
 
-  6. [ sh '$0' copy-files-all ] This step can be skipped if there are no updates made to the
+  7. [ CLI_TOOL copy-files-all ] This step can be skipped if there are no updates made to the
   Theme Customiser. In theory, the changes are all JSON content.
     - Review any content changes made. Sometimes a manual merge is required.
-    - [ sh '$0' git-commit ] Run another git commit to save the changes. If you need to
+    - [ CLI_TOOL git-commit ] Run another git commit to save the changes. If you need to
     restart the process, use the ZIP backup file created in step 3 or 6.
 
-  7. [ sh '$0' git-push ] This will push all changes to git, which in turn will push to Shopify
+  8. [ CLI_TOOL git-push ] This will push all changes to git, which in turn will push to Shopify
 
 ############################################################################################################
   
