@@ -267,6 +267,7 @@ rm -rf /var/www/$WP_TEMPLATE_REPO/.gitignore || true;
 
 # Import DB
 cd /var/www/html;
+wp db clean --yes;
 wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root || true;
 rm /var/www/$WP_TEMPLATE_REPO/db.sql || true;
 
