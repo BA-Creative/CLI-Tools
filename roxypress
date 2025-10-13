@@ -261,21 +261,34 @@ npm install swiper;
 # ===================================
 # Clone RoxyPress (Expects: wp-content)
 # ===================================
-git clone git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /var/www/$WP_TEMPLATE_REPO;
-rm -rf /var/www/$WP_TEMPLATE_REPO/.git || true;
-rm -rf /var/www/$WP_TEMPLATE_REPO/.gitignore || true;
+git clone -b prod git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /tmp/$WP_TEMPLATE_REPO;
+rm -rf /tmp/$WP_TEMPLATE_REPO/.git || true;
+rm -rf /tmp/$WP_TEMPLATE_REPO/.gitignore || true;
 
 # Import DB
 cd /var/www/html;
 wp db clean --yes --allow-root;
-wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root || true;
-rm /var/www/$WP_TEMPLATE_REPO/db.sql || true;
+wp db import /tmp/$WP_TEMPLATE_REPO/db.sql --allow-root || true;
+rm /tmp/$WP_TEMPLATE_REPO/db.sql || true;
 
-# Merge or Overwrite wp-content
-rsync -av /var/www/$WP_TEMPLATE_REPO/ /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+# Merge resources directory structure
+# Only copy resources directory contents, not the entire theme root
+cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+
+# Copy resources files (views, css, js, images, etc.)
+rsync -av /tmp/$WP_TEMPLATE_REPO/resources/ ./resources/;
+
+# Copy app files (PHP logic)
+rsync -av /tmp/$WP_TEMPLATE_REPO/app/ ./app/;
+
+# Copy config files if they exist
+rsync -av /tmp/$WP_TEMPLATE_REPO/config/ ./config/ || true;
+
+# Copy any ACF JSON
+rsync -av /tmp/$WP_TEMPLATE_REPO/acf-json/ ./acf-json/ || true;
 
 # Remove temporary git clone directory
-rm -rf /var/www/$WP_TEMPLATE_REPO;
+rm -rf /tmp/$WP_TEMPLATE_REPO;
 
 # Remove any .sql files (just in case)
 find /var/www/html -name "**.sql" -type f -delete;
