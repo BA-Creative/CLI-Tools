@@ -261,7 +261,7 @@ npm install swiper;
 # ===================================
 # Clone RoxyPress (Expects: wp-content)
 # ===================================
-git clone -b prod https://git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /tmp/$WP_TEMPLATE_REPO;
+git clone -b prod git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /tmp/$WP_TEMPLATE_REPO;
 rm -rf /tmp/$WP_TEMPLATE_REPO/.git || true;
 rm -rf /tmp/$WP_TEMPLATE_REPO/.gitignore || true;
 
