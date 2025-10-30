@@ -261,31 +261,50 @@ npm install swiper;
 # ===================================
 # Clone RoxyPress (Expects: wp-content)
 # ===================================
-git clone -b prod https://git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /tmp/$WP_TEMPLATE_REPO;
+git clone -b prod git@github.com:BA-Creative/$WP_TEMPLATE_REPO.git /tmp/$WP_TEMPLATE_REPO;
 rm -rf /tmp/$WP_TEMPLATE_REPO/.git || true;
 rm -rf /tmp/$WP_TEMPLATE_REPO/.gitignore || true;
 
 # Import DB
 cd /var/www/html;
-wp db clean --yes --allow-root;
-wp db import /tmp/$WP_TEMPLATE_REPO/db.sql --allow-root || true;
-rm /tmp/$WP_TEMPLATE_REPO/db.sql || true;
+if [ -f "/tmp/$WP_TEMPLATE_REPO/db.sql" ]; then
+  echo "Database file found, importing...";
+  wp db clean --yes --allow-root;
+  wp db import /tmp/$WP_TEMPLATE_REPO/db.sql --allow-root;
+  rm /tmp/$WP_TEMPLATE_REPO/db.sql;
+else
+  echo "No database file found, skipping import...";
+fi
 
-# Merge resources directory structure
-# Only copy resources directory contents, not the entire theme root
+# Copy only specific files from RoxyPress
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
 
-# Copy resources files (views, css, js, images, etc.)
-rsync -av /tmp/$WP_TEMPLATE_REPO/resources/ ./resources/;
+# Copy resources directory (views, css, js, images, etc.)
+if [ -d "/tmp/$WP_TEMPLATE_REPO/resources" ]; then
+  echo "Copying resources directory...";
+  rsync -av /tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/resources/ ./resources/;
+else
+  echo "No resources directory found in template repo";
+fi
 
-# Copy app files (PHP logic)
-rsync -av /tmp/$WP_TEMPLATE_REPO/app/ ./app/;
+# Copy only app/custom.php
+if [ -f "/tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/app/custom.php" ]; then
+  echo "Copying app/custom.php...";
+  mkdir -p ./app;
+  cp /tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/app/custom.php ./app/custom.php;
+else
+  echo "No app/custom.php found in template repo";
+fi
+
 
 # Copy config files if they exist
 rsync -av /tmp/$WP_TEMPLATE_REPO/config/ ./config/ || true;
 
-# Copy any ACF JSON
-rsync -av /tmp/$WP_TEMPLATE_REPO/acf-json/ ./acf-json/ || true;
+# Copy ACF Json if it exists
+if [ -d "/tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/acf-json" ]; then
+  echo "Copying acf-json directory...";
+  rsync -av /tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/acf-json/ ./acf-json/;
+fi
 
 # Remove temporary git clone directory
 rm -rf /tmp/$WP_TEMPLATE_REPO;
