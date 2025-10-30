@@ -255,11 +255,23 @@ git clone -b prod https://${GITHUB_TOKEN}@github.com/BA-Creative/$WP_TEMPLATE_RE
 rm -rf /var/www/$WP_TEMPLATE_REPO/.git || true;
 rm -rf /var/www/$WP_TEMPLATE_REPO/.gitignore || true;
 
-# Import DB
+# Import DB - Check if database file exists and import
 cd /var/www/html;
-wp db clean --yes --allow-root;
-wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root || true;
-rm /var/www/$WP_TEMPLATE_REPO/db.sql || true;
+if [ -f "/var/www/$WP_TEMPLATE_REPO/db.sql" ]; then
+  echo "Database file found, importing...";
+  # Wait for database to be ready
+  until mysqladmin ping -h"database" -P"3306" -u"${WP_DB_USER}" -p"${WP_DB_PASSWORD}" --silent; do
+    echo "Waiting for database to be ready...";
+    sleep 2;
+  done
+  # Clean and import database
+  wp db clean --yes --allow-root;
+  wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root;
+  echo "Database imported successfully";
+  rm /var/www/$WP_TEMPLATE_REPO/db.sql;
+else
+  echo "No database file found at /var/www/$WP_TEMPLATE_REPO/db.sql";
+fi
 
 # Copy only specific files from RoxyPress
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
@@ -298,10 +310,12 @@ rm -f ~/.git-credentials;
 # Remove any .sql files (just in case)
 find /var/www/html -name "**.sql" -type f -delete;
 
-# Install dependencies
+# Install dependencies and build
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
 composer install;
 npm install;
+
+# Run build (this should work now with the copied resources)
 npm run build;
 
 # ===================================
@@ -345,6 +359,6 @@ fi
 open -a "Docker" && docker-compose -f docker-compose.yml up -d --build
 
 printf "\n=========================================\n\n"
-print_color "$GREEN" "PHP: http://localhost:8080"
+print_color "$GREEN" "PHP: http://localhost:8000"
 print_color "$GREEN" "NPM: http://localhost:3000"
 printf "\n=========================================\n"
