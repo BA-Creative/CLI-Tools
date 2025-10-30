@@ -169,12 +169,6 @@ apt-get install -y default-mysql-client;
 # ==============================================================================
 apt install -y git-all;
 
-# Clean up /var/www/html if not empty # ========================================
-# ==============================================================================
-# if [ -n "$(ls -A /var/www/html)" ]; then
-#   rm -rf /var/www/html/*
-# fi;
-
 # Write multiline text to a file
 if [ ! -d ~/.ssh/ ]; then
   mkdir ~/.ssh/;
@@ -280,30 +274,32 @@ fi
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
 
 # Copy resources directory (views, css, js, images, etc.)
-if [ -d "/tmp/$WP_TEMPLATE_REPO/resources" ]; then
+if [ -d "/tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/resources" ]; then
   echo "Copying resources directory...";
-  rsync -av /tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/resources/ ./resources/;
+  rsync -av /tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/resources/ ./resources/;
 else
   echo "No resources directory found in template repo";
 fi
 
 # Copy only app/custom.php
-if [ -f "/tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/app/custom.php" ]; then
+if [ -f "/tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/app/custom.php" ]; then
   echo "Copying app/custom.php...";
   mkdir -p ./app;
-  cp /tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/app/custom.php ./app/custom.php;
+  cp /tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/app/custom.php ./app/custom.php;
 else
   echo "No app/custom.php found in template repo";
 fi
 
-
 # Copy config files if they exist
-rsync -av /tmp/$WP_TEMPLATE_REPO/config/ ./config/ || true;
+if [ -d "/tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/config" ]; then
+  echo "Copying config directory...";
+  rsync -av /tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/config/ ./config/;
+fi
 
 # Copy ACF Json if it exists
-if [ -d "/tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/acf-json" ]; then
+if [ -d "/tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/acf-json" ]; then
   echo "Copying acf-json directory...";
-  rsync -av /tmp/$WP_TEMPLATE_REPO/themes/roxypress-lite/acf-json/ ./acf-json/;
+  rsync -av /tmp/$WP_TEMPLATE_REPO/wp-content/themes/roxypress-lite/acf-json/ ./acf-json/;
 fi
 
 # Remove temporary git clone directory
@@ -312,8 +308,43 @@ rm -rf /tmp/$WP_TEMPLATE_REPO;
 # Remove any .sql files (just in case)
 find /var/www/html -name "**.sql" -type f -delete;
 
-# Install dependencies
+# ===================================
+# Configure Vite for Docker
+# ===================================
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+
+# Create/update vite.config.js for Docker
+cat > "./vite.config.js" << 'VITEEOF'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+    hmr: {
+      host: 'localhost',
+      port: 3000
+    }
+  },
+  build: {
+    outDir: 'public',
+    manifest: true,
+    rollupOptions: {
+      input: {
+        app: 'resources/js/app.js',
+        editor: 'resources/js/editor.js'
+      }
+    }
+  }
+})
+VITEEOF
+
+# Update package.json scripts for Docker
+npm pkg set scripts.dev="vite --host 0.0.0.0 --port 3000"
+npm pkg set scripts.build="vite build"
+npm pkg set scripts.preview="vite preview --host 0.0.0.0 --port 3000"
+
+# Install dependencies and build
 composer install;
 npm install;
 npm run build;
@@ -322,11 +353,15 @@ npm run build;
 # Modify theme
 # ===================================
 # Replace collect(['setup', 'filters']) in functions.php
-cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
 sed -i "s/collect(\['setup', 'filters'\])/collect(array_map(fn(\$f) => pathinfo(\$f, PATHINFO_FILENAME), glob(__DIR__ . '\/app\/*.php')))/g" functions.php;
 
-# Set up sage .env file
-printf "APP_URL=http://localhost:${LOCAL_PORT_PHP}" > ./.env;
+# Configure Sage Environment
+cat > "./.env" << SAGEEOF
+APP_URL=http://localhost:${LOCAL_PORT_PHP}
+WP_ENV=development
+WP_DEBUG=true
+WP_DEVELOPMENT_MODE=theme
+SAGEEOF
 
 # ===================================
 # Activate theme
@@ -337,9 +372,16 @@ wp theme activate $WP_PROJECT_HANDLE --allow-root;
 # ===================================
 # Start DEV server
 # ===================================
-# Start NPM development server
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
-npm run dev &
+
+# Start Vite dev server in background
+echo "Starting Vite dev server...";
+nohup npm run dev > /var/log/vite.log 2>&1 &
+
+# Wait for Vite to start
+sleep 3;
+
+echo "Vite dev server started on port 3000";
 
 MAINEOF
 
