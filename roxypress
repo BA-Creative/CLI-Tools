@@ -247,6 +247,7 @@ composer require log1x/sage-svg;
 # Install NPM dependencies
 npm install;
 npm install swiper;
+npm install @wordpress/dom-ready @wordpress/element @wordpress/blocks @wordpress/components;
 
 # ===================================
 # Clone RoxyPress using HTTPS with token
