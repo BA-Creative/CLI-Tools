@@ -39,7 +39,7 @@ MARIADB_ROOT_PASSWORD=root
 MARIADB_DATABASE=wp
 
 # LOCAL DEV
-LOCAL_PORT_PHP=8000
+LOCAL_PORT_PHP=8080
 LOCAL_PORT_NPM=3000
 
 # WORDPRESS
@@ -262,7 +262,15 @@ if [ -f "/var/www/$WP_TEMPLATE_REPO/db.sql" ]; then
   wp db clean --yes --allow-root;
   wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root;
   echo "Database imported successfully";
-  rm /var/www/$WP_TEMPLATE_REPO/db.sql;
+
+ # Replace sage-11.dev URLs with local development URLs
+  wp search-replace --allow-root "https://sage-11.dev" "http://localhost:${LOCAL_PORT_PHP}";
+  wp search-replace --allow-root "http://sage-11.dev" "http://localhost:${LOCAL_PORT_PHP}";
+  wp option update --allow-root home "http://localhost:${LOCAL_PORT_PHP}";
+  wp option update --allow-root siteurl "http://localhost:${LOCAL_PORT_PHP}";
+  echo "URLs updated from sage-11.dev to localhost:${LOCAL_PORT_PHP}";
+  
+  rm /var/www/$WP_TEMPLATE_REPO/db.sql || true;
 else
   echo "No database file found at /var/www/$WP_TEMPLATE_REPO/db.sql";
 fi
