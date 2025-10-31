@@ -39,7 +39,7 @@ MARIADB_ROOT_PASSWORD=root
 MARIADB_DATABASE=wp
 
 # LOCAL DEV
-LOCAL_PORT_PHP=8000
+LOCAL_PORT_PHP=8080
 LOCAL_PORT_NPM=3000
 
 # WORDPRESS
@@ -57,7 +57,7 @@ WP_ADMIN_PASS=admin
 GITHUB_TOKEN=$GITHUB_TOKEN
 
 #ACF
-ACF_KEY=MWQ0YjAxZWJlNDUwNzcxMTQzMDNmNDFjYzgwMDczYWIyNzExYTY2NDM3ZjYxMzFlMjY5YWQ4
+ACF_KEY=MWQ0YjAxZWJlNDUwNzcxMTQzMDNmNDFjYzgwMDczYWIyNzExYTY2NDM3ZjYxMzFlMjY5YWQ8
 EOF
     
 cat > "./docker-compose.yml" << 'EOF'
@@ -255,16 +255,10 @@ git clone -b prod https://${GITHUB_TOKEN}@github.com/BA-Creative/$WP_TEMPLATE_RE
 rm -rf /var/www/$WP_TEMPLATE_REPO/.git || true;
 rm -rf /var/www/$WP_TEMPLATE_REPO/.gitignore || true;
 
-# Import DB - Check if database file exists and import
+# Import DB (WordPress handles database connection automatically)
 cd /var/www/html;
 if [ -f "/var/www/$WP_TEMPLATE_REPO/db.sql" ]; then
   echo "Database file found, importing...";
-  # Wait for database to be ready
-  until mysqladmin ping -h"database" -P"3306" -u"${WP_DB_USER}" -p"${WP_DB_PASSWORD}" --silent; do
-    echo "Waiting for database to be ready...";
-    sleep 2;
-  done
-  # Clean and import database
   wp db clean --yes --allow-root;
   wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root;
   echo "Database imported successfully";
@@ -359,6 +353,6 @@ fi
 open -a "Docker" && docker-compose -f docker-compose.yml up -d --build
 
 printf "\n=========================================\n\n"
-print_color "$GREEN" "PHP: http://localhost:8000"
+print_color "$GREEN" "PHP: http://localhost:8080"
 print_color "$GREEN" "NPM: http://localhost:3000"
 printf "\n=========================================\n"
