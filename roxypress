@@ -303,6 +303,15 @@ else
   echo "No vite.config.js found in template repo";
 fi
 
+# Copy uploads directory if it exists
+if [ -d "/var/www/$WP_TEMPLATE_REPO/uploads" ]; then
+  echo "Copying uploads directory...";
+  mkdir -p /var/www/html/wp-content/uploads;
+  rsync -av /var/www/$WP_TEMPLATE_REPO/uploads/ /var/www/html/wp-content/uploads/;
+else
+  echo "No uploads directory found in template repo";
+fi
+
 # Remove temporary git clone directory
 rm -rf /var/www/$WP_TEMPLATE_REPO;
 
