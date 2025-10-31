@@ -180,8 +180,8 @@ apt-get install -y default-mysql-client;
 apt install -y git-all;
 
 # Configure Git identity
-git config --global user.name "Jill"
-git config --global user.email "jill@bacreative.com.au"
+git config --global user.name "BA Creative"
+git config --global user.email "apps@bacreative.com.au"
 
 # Configure Git with token authentication
 git config --global credential.helper store
