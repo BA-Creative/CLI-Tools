@@ -340,6 +340,7 @@ wp theme activate $WP_PROJECT_HANDLE --allow-root;
 # ===================================
 # Start NPM development server
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
+npm install;
 npm run dev &
 
 MAINEOF
