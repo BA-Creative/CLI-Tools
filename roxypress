@@ -251,7 +251,12 @@ npm install swiper;
 # ===================================
 # Clone RoxyPress using HTTPS with token (Expects: wp-content)
 # ===================================
+#Clone Prod for resource files
 git clone -b prod https://${GITHUB_TOKEN}@github.com/BA-Creative/$WP_TEMPLATE_REPO.git /var/www/$WP_TEMPLATE_REPO;
+
+# Also clone master to source latest vite.config.js
+git clone -b master https://${GITHUB_TOKEN}@github.com/BA-Creative/$WP_TEMPLATE_REPO.git /var/www/${WP_TEMPLATE_REPO}_master;
+
 rm -rf /var/www/$WP_TEMPLATE_REPO/.git || true;
 rm -rf /var/www/$WP_TEMPLATE_REPO/.gitignore || true;
 
@@ -295,16 +300,18 @@ else
   echo "No acf-json directory found in template repo";
 fi
 
-# Copy vite.config.js if it exists
-# if [ -f "/var/www/$WP_TEMPLATE_REPO/themes/roxypress-lite/vite.config.js" ]; then
-#   echo "Copying vite.config.js...";
-#   cp /var/www/$WP_TEMPLATE_REPO/themes/roxypress-lite/vite.config.js ./vite.config.js;
-# else
-#   echo "No vite.config.js found in template repo";
-# fi
+# Copy vite.config.js if it exists (from master branch)
+if [ -f "/var/www/${WP_TEMPLATE_REPO}_master/vite.config.js" ]; then
+  echo "Copying vite.config.js...";
+  cp /var/www/${WP_TEMPLATE_REPO}_master/themes/roxypress-lite/vite.config.js ./vite.config.js;
+else
+  echo "No vite.config.js found in template repo";
+fi
+
 
 # Remove temporary git clone directory
 rm -rf /var/www/$WP_TEMPLATE_REPO;
+rm -rf /var/www/${WP_TEMPLATE_REPO}_master;
 
 # Clean up git credentials for security
 rm -f ~/.git-credentials;
