@@ -296,12 +296,12 @@ else
 fi
 
 # Copy vite.config.js if it exists
-if [ -f "/var/www/$WP_TEMPLATE_REPO/themes/roxypress-lite/vite.config.js" ]; then
-  echo "Copying vite.config.js...";
-  cp /var/www/$WP_TEMPLATE_REPO/themes/roxypress-lite/vite.config.js ./vite.config.js;
-else
-  echo "No vite.config.js found in template repo";
-fi
+# if [ -f "/var/www/$WP_TEMPLATE_REPO/themes/roxypress-lite/vite.config.js" ]; then
+#   echo "Copying vite.config.js...";
+#   cp /var/www/$WP_TEMPLATE_REPO/themes/roxypress-lite/vite.config.js ./vite.config.js;
+# else
+#   echo "No vite.config.js found in template repo";
+# fi
 
 # Remove temporary git clone directory
 rm -rf /var/www/$WP_TEMPLATE_REPO;
