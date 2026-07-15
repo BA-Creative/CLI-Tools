@@ -156,9 +156,12 @@ apt-get install -y curl unzip vim rsync;
 
 # Install Node.js and NPM # ====================================================
 # ==============================================================================
-curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh;
+# Node 22 LTS — the 23.x repo is EOL and unsigned, which silently falls back
+# to Debian's outdated node/npm packages
+curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh;
 bash nodesource_setup.sh;
-apt-get install -y nodejs npm;
+apt-get install -y nodejs;
+node -v; npm -v;
 
 # Install Composer # ===========================================================
 # ==============================================================================
@@ -239,10 +242,23 @@ wp plugin install wp-mail-smtp --allow-root --activate;
 # ===================================
 composer create-project roots/sage $WP_PROJECT_HANDLE --working-dir=/var/www/html/wp-content/themes;
 cd /var/www/html/wp-content/themes/$WP_PROJECT_HANDLE;
-composer require roots/acorn;
-composer require log1x/acf-composer;
-composer require log1x/sage-directives;
-composer require log1x/sage-svg;
+# Single require with retries: composer installs on the macOS bind mount can
+# transiently fail ("Failed to open directory" race in vendor/), which would
+# otherwise kill the whole init via set -e
+composer_ok=0;
+for attempt in 1 2 3; do
+  if composer require roots/acorn log1x/acf-composer log1x/sage-directives log1x/sage-svg; then
+    composer_ok=1;
+    break;
+  fi
+  echo "composer require failed (attempt ${attempt}), cleaning vendor and retrying...";
+  rm -rf vendor composer.lock;
+  sleep 5;
+done
+if [ "$composer_ok" -ne 1 ]; then
+  echo "ERROR: composer require failed after 3 attempts";
+  exit 1;
+fi
 
 # Install NPM dependencies
 npm install;
