@@ -268,6 +268,24 @@ if [ -f "/var/www/$WP_TEMPLATE_REPO/db.sql" ]; then
   wp db import /var/www/$WP_TEMPLATE_REPO/db.sql --allow-root;
   echo "Database imported successfully";
   rm /var/www/$WP_TEMPLATE_REPO/db.sql;
+
+  # Normalize URLs to this environment, whatever the dump was exported from.
+  # Done post-import via search-replace (not sed on the .sql) so serialized
+  # PHP data keeps its string lengths intact.
+  CURRENT_URL=$(wp option get siteurl --allow-root);
+  TARGET_URL="http://localhost:${LOCAL_PORT_PHP}";
+  if [ "$CURRENT_URL" != "$TARGET_URL" ]; then
+    echo "Rewriting URLs: $CURRENT_URL -> $TARGET_URL";
+    wp search-replace "$CURRENT_URL" "$TARGET_URL" --all-tables --allow-root;
+  fi
+
+  # The import replaced the users table, so make WP_ADMIN_USER/WP_ADMIN_PASS
+  # from .env valid again
+  if wp user get "${WP_ADMIN_USER}" --allow-root > /dev/null 2>&1; then
+    wp user update "${WP_ADMIN_USER}" --user_pass="${WP_ADMIN_PASS}" --allow-root;
+  else
+    wp user create "${WP_ADMIN_USER}" admin@example.com --role=administrator --user_pass="${WP_ADMIN_PASS}" --allow-root;
+  fi
 else
   echo "No database file found at /var/www/$WP_TEMPLATE_REPO/db.sql";
 fi
